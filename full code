@@ -1,0 +1,59 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+d = {chr(i): i for i in range(255)}
+c = {i: chr(i) for i in range(255)}
+
+image_path = "content/TestCase3.jpg"
+x = cv2.imread(image_path)
+
+if x is None:
+    print(f"Error: Could not load image from {image_path}")
+else:
+    xrgb = cv2.cvtColor(x, cv2.COLOR_BGR2RGB)
+    key = "123"
+    text = "Karthikeya"
+
+    text_ascii = [d[ch] for ch in text]
+    key_ascii = [d[ch] for ch in key]
+    print("Text ASCII:", text_ascii)
+    print("Key ASCII:", key_ascii)
+    x_enc = x.copy()
+    n, m, z = 0, 0, 0
+    l = len(text)
+    kl = 0
+
+    flat_x_enc = x_enc.reshape(-1, 3)
+    for i in range(l):
+        new_val = d[text[i]] ^ d[key[kl]]
+        flat_x_enc[i % flat_x_enc.shape[0], i % 3] = new_val
+        kl = (kl + 1) % len(key)
+    x_enc_rgb = cv2.cvtColor(x_enc, cv2.COLOR_BGR2RGB)
+
+
+
+    flat_x_enc = x_enc.reshape(-1, 3)
+    decrypt = ""
+    kl = 0
+    for i in range(l):
+        val = flat_x_enc[i % flat_x_enc.shape[0], i % 3]
+        orig_char = c[val ^ d[key[kl]]]
+        decrypt += orig_char
+        kl = (kl + 1) % len(key)
+
+
+
+    fig, axs = plt.subplots(2, 1, figsize=(10, 7), gridspec_kw={'height_ratios': [2, 1]})
+    fig.suptitle("Project Output – Image Encryption and Decryption using Steganography", fontsize=14, fontweight='bold')
+
+    axs[0].imshow(np.hstack((xrgb, x_enc_rgb)))
+    axs[0].axis('off')
+    axs[0].set_title("Original Image                                                  Encrypted Image")
+    text_info = f"Text ASCII: {text_ascii}\nKey ASCII: {key_ascii}\nDecrypted Text: {decrypt}"
+    axs[1].text(0.01, 0.5, text_info, fontsize=12, family='monospace', verticalalignment='center')
+    axs[1].axis('off')
+
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.85)
+    plt.show()
